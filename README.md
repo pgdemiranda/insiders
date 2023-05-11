@@ -75,23 +75,16 @@ https://www.kaggle.com/datasets/carrie1/ecommerce-data
 A database containing customers separated into their clusters. This database has been hosted on AWS and can be updated daily and made available to the company. It is also possible to query it for visualization in a tool (we use Metadata).
 
 ## 3.2. Tools Used
-> Python 3.10.10;
->
->VS Code;
->
->Jupyter Notebook;
->
->YData-Profiling;
->
->Metadata;
->
->SQL:
->> SQLite and PostgreSQL;
->
->Git and Github;
->
->Amazon Web Services: 
->>S3, RDS and EC2.
+- Python 3.10.10;
+- VS Code;
+- Jupyter Notebook;
+- YData-Profiling;
+- Metadata;
+- SQL:
+  - SQLite and PostgreSQL;
+- Git and Github;
+- Amazon Web Services: 
+  - S3, RDS and EC2.
 
 # 4. Solution Strategy
 
