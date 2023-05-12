@@ -45,9 +45,6 @@ We need to determine who the eligible customers are to participate in the Inside
 3. What are the main characteristics of these customers?
 4. What percentage of revenue contribution comes from Insiders?
 5. What is the revenue expectation for this group in the next few months?
-6. What are the conditions for a person to be eligible for Insiders?
-7. What guarantee is there that the Insiders program is better than the rest of the base?
-8. What actions can the marketing team take to increase revenue?
 
 # 2. Business Assumptions
 
@@ -79,7 +76,7 @@ A database containing customers separated into their clusters. This database has
 - VS Code;
 - Jupyter Notebook;
 - YData-Profiling;
-- Metadata;
+- Metabase;
 - SQL:
   - SQLite and PostgreSQL;
 - Git and Github;
@@ -119,56 +116,88 @@ Finally, we applied `MinMaxScaler` to our features and chose a combination of Un
 - `WCSS`, or Within-Cluster Sum of Squares, is the sum of the squared distances between each point and the centroid of the cluster it belongs to. The goal is to minimize the variation within each cluster.
 - `SS`, or Silhouette Score, measures the quality of a cluster by evaluating how well each point fits in its cluster and how different it is from other clusters. The Silhouette Score ranges from -1 to 1, with values close to 1 indicating that the point is well-fitted to its cluster and far from other clusters, while values close to -1 indicate that the point may have been assigned to the wrong cluster.
 
-**Step 08. Model Training:** given our metrics, we decided on the GMM, Gaussian Mixture Model. This model assumes that the data points are generated from a mixture of several Gaussian distributions, and it estimates the parameters of each distribution to assign each data point to the most likely cluster. We plotted a graph to obtain the best Silhouette Score between 2 and 25 clusters and ended up choosing a model with 8 clusters, which, although not obtaining the best Silhouette Score, provides a number of clusters that the marketing team can comfortably consider which actions will be taken on these customers.
+**Step 08. Model Training:** given our metrics, we decided on the GMM, Gaussian Mixture Model. This model assumes that the data points are generated from a mixture of several Gaussian distributions, and it estimates the parameters of each distribution to assign each data point to the most likely cluster. We plotted a graph to obtain the best Silhouette Score between 2 and 25 clusters and ended up choosing a model with 10 clusters, which, although not obtaining the best Silhouette Score, provides a number of clusters that the marketing team can comfortably consider which actions will be taken on these customers.
 
 **Step 09. Cluster Analysis:** the resulting clusters were grouped according to features that can offer direct insights into their characteristics, so that each cluster should inform us how many customers are in it, its percentage relative to the total number of customers, and the averages of gross revenue, recency in days, how many products they purchased, quantity of products, purchase frequency, and the quantity of returned products.
 
-**Step 10. Deploy Model to Production:** we created a SQLite database locally to explore the possibility of automating the creation of clusters whenever the marketing team requested it. The idea was to ingest data from new and old customers, redo the clusters, and show the results. We used the papermill library to manage this automation with the python-crontab library if regular evaluation was requested within a time period. We used AWS services to make this solution work on the cloud: we created an S3 bucket to store the pkl files and the final model, an RDS PostgreSQL database to allow us to ingest and add new data, and an EC2 instance to run the solution remotely and provide a new notebook with the date and time of this task.
+**Step 10. Deploy Model to Production:** we created a SQLite database locally to explore the possibility of automating the creation of clusters whenever the marketing team requested it. The idea was to ingest data from new and old customers, redo the clusters, and show the results. We used the Papermill library to manage this automation with the Crontab if regular evaluation was requested within a time period. We used AWS services to make this solution work on the cloud: we created an S3 bucket to store the pkl files and the final model, an RDS PostgreSQL database to allow us to ingest and add new data, and an EC2 instance to run the solution remotely and provide a new notebook with the date and time of this task. The update of this process can be examined with the help of Metabase, which display the situation of the Insiders cluster.
 
-# 6. Machine Learning Model Applied
+# 6. Top 3 Data Insights
+
+**Hypothesis 01:** Insiders cluster customers is responsible for more than 80% of purchases.
+
+**False**: the Insider cluster has a product purchase volume of 7.92%.
+
+**Hypothesis 02:** the customers in the Insiders cluster have a return rate below the average of the total customer base.
+
+**True**: The insiders cluster has an average return rate of 0%.
+
+*Hypothesis 03:** the **Gross Merchandise Volume** of Insiders cluster is concentrated in the 3rd quartile.
+**False**. The revenue of the insiders cluster is concentrated between the 2nd and 3rd quartiles.
+<p align="center">
+  <img src="./reports/H3.png" />
+</p>
+
+# 7. Machine Learning Model Applied
 
 We applied the Gaussian Mixture Model, `GaussianMixture`, which is a probabilistic model based on the assumption that data is generated from normal (i.e. Gaussian) distributions, where each distribution represents a cluster of data. The algorithm randomly initializes the parameters of the distributions and then iteratively updates these parameters until convergence. During each iteration, the algorithm performs the **E-step**, where it calculates the probability of each data point belonging to each distribution, and the **M-step**, where it updates the parameters of the distributions based on the calculated probabilities. 
 
 After estimating the parameters of the distributions, the algorithm can be used for clustering and density estimation. For the purposes of this project, which is a clustering problem, the algorithm assigns each data point to the distribution with the highest probability and considers all points assigned to the same distribution as belonging to the same cluster.
 
-# 7. Machine Learning Model Performance
+# 8. Machine Learning Model Performance
 
-Our final model has a Silhouette Score of **0.38966619968414307** for 8 clusters, which, as previously mentioned, was a number we found reasonable to present to the marketing team. Below we present the final list of our clusters ranked by the average of their `gross_revenue`:
+Our final model has a Silhouette Score of **0.4291628301143646** for 8 clusters, which, as previously mentioned, was a number we found reasonable to present to the marketing team. Below we present the final list of our clusters ranked by the average of their `gross_revenue`:
 
-| cluster | customer_id | perc_customer | gross_revenue | recency_days | qty_products | frequency | qty_returns |
-| :-----: | :---------: | :-----------: | :-----------: | :----------: | :----------: | :-------: | :---------: |
-|    2    |     86      |    1.510097   | 4179.930465  |  182.767442  |  485.627907  |  1.000000 |   0.000000  |
-|    5    |    1103     |   19.367867   | 2319.363409  |  89.511333   |  116.353581  |  0.364091 |  22.395286  |
-|    3    |    1675     |   29.411765   | 1983.856125  |  91.970746   |  84.160597   |  0.419957 |  77.180299  |
-|    1    |    819      |   14.381036   | 1952.084786  |  90.787546   |  79.439560   |  0.396535 |  18.326007  |
-|    0    |    732      |   12.853380   | 1524.104563  |  98.396175   |  84.438525   |  0.438622 |  12.411202  |
-|    4    |    537      |   9.429324    | 1164.943389  |  92.491620   |  82.674115   |  1.000000 |   0.000000  |
-|    6    |    550      |   9.657594    | 706.504909   |  297.225455  |  56.094545   |  1.000000 |   0.000000  |
-|    7    |    193      |   3.388938    | 701.622798   |  196.269430  |  73.689119   |  1.000000 |   0.000000  |
+|   cluster |   customer_id |   perc_customer |   gross_revenue |   recency_days |   qty_products |   frequency |   qty_returns |
+|----------:|--------------:|----------------:|----------------:|---------------:|---------------:|------------:|--------------:|
+|         0 |            86 |         1.5101  |       4179.9305 |      182.767442 |      485.627907 |    1        |     0         |
+|         3 |          1054 |        18.5075  |       2376.396  |       91.273245 |      119.074953 |    0.36202  |    23.312144 |
+|         1 |           902 |        15.8385  |       2171.4951 |       96.359202 |       84.579823 |    0.414578 |   133.940133 |
+|         6 |           806 |        14.1528  |       1960.92   |       91.942928 |       79.620347 |    0.399659 |    18.543424 |
+|         5 |           702 |        12.3266  |       1756.7314 |       92.320513 |       79.921652 |    0.445168 |    11.274929 |
+|         4 |           413 |         7.252   |       1538.5923 |      102.099274 |        70.179177 |    0.45777  |     9.200969 |
+|         7 |           452 |         7.93679 |       1511.1577 |       77.35177  |       99.818584 |    0.379743 |    13.334071 |
+|         9 |           537 |         9.42932 |       1164.9434 |       92.49162  |       82.674115 |    1        |     0         |
+|         8 |           550 |         9.65759 |        706.50491 |      297.225455 |        56.094545 |    1        |     0         |
+|         2 |           193 |         3.38894 |        701.6228 |      196.26943  |        73.689119 |    1        |     0         |
 
-# 8. Business Results
->## Insiders:
-> Number of Customers: 86 (1.51% of the customers)
->
-> Gross Revenue: US$ 4179.93
->
-> Average Recency: 183 days
->
-> Average number of products purchased : 486 produtos
->
-> Frequency of products purchased: 100%
+# 9. Business Results
+## Insiders:
+- Number of Customers: 86 (1.51% of the customers)
+- Gross Revenue: US$ 4179.93
+- Average Recency: 183 days
+- Average number of products purchased : 486 products
+- Frequency of products purchased: 100%
 
 ### 1. Who are the eligible people to participate in the Insiders program?
+Only 1,51% of the customers.
+
 ### 2. How many customers will be part of the group?
+86 customers.
+
 ### 3. What are the main characteristics of these customers?
+- Number of customers: 86 (1.5% of customers)
+- Average gross revenue: US$4179,93
+- Average recency: 183 days
+- Average number of products purchased: 486 products
+- Average frequency of products purchased: 1 product/day
+
 ### 4. What percentage of revenue contribution comes from Insiders?
+**0.035575079092110024%**
+
 ### 5. What is the revenue expectation for this group in the next few months?
-### 6. What are the conditions for a person to be eligible for Insiders?
-### 7. What guarantee is there that the Insiders program is better than the rest of the base?
-### 8. What actions can the marketing team take to increase revenue?
+The average gross revenue is **US$4179.93** with a fluctuation between **US$3745.911** and **US$4613.94**
 
 # 9. Conclusions
--
+Finally, the cluster elected as the Insiders brings some surprises: a cluster with only 86 customers (1.5%) has the highest average gross revenue among all ten clusters. With an average of 1 product per day, an average purchase of 486 products, and no returns, the marketing team urgently needs to decrease the average recency of the customers within this cluster and offer opportunities to add more customers to the Insiders.
+
+Below is a simple Metabase dashboard that allows us to monitor this cluster. We have prepared notebook 10 to receive new data through queries from a local database (SQLite), and this process of data ingestion, clustering model update, and data export to this database can be done with the help of the Papermill library.
+
+However, this automation can also be done online through AWS: our .pkl files have been stored in S3, the PostgreSQL database stored in RDS, and the Papermill process is regulated according to the scheduling of Crontab on a virtual machine prepared in the EC2 service. This entire process can be monitored in an online query through Metabase that displays information about the clusters, including Insiders.
+
+<p align="center">
+  <img src="./reports/Dashboard.png" />
+</p>
 
 # 10. Lessons Learned
 This was not only the first Clustering project we carried out, but also the first one with a solution involving unsupervised machine learning models. Additionally, we conducted research around dimensionality reduction algorithms, as well as the business model incorporated in this challenge. It was also the first time we had the opportunity to think of a solution using AWS.
